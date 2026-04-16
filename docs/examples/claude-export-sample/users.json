@@ -1,0 +1,8 @@
+[
+	{
+		"uuid": "account-sample-1",
+		"full_name": "Sample Maintainer",
+		"email_address": "sample.maintainer@example.com",
+		"verified_phone_number": null
+	}
+]

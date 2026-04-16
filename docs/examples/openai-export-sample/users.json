@@ -1,0 +1,7 @@
+{
+	"id": "user-sample-openai",
+	"email": "sample.user@example.com",
+	"chatgpt_plus_user": false,
+	"birth_year": 1990,
+	"phone_number": null
+}

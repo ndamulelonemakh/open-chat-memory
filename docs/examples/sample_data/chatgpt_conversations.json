@@ -1,0 +1,34 @@
+[
+  {
+    "conversation_id": "conv-sample-1",
+    "title": "Refactor Helper",
+    "create_time": 1704067200.0,
+    "update_time": 1704067300.0,
+    "mapping": {
+      "msg-u-1": {
+        "id": "msg-u-1",
+        "message": {
+          "id": "msg-u-1",
+          "author": {"role": "user", "name": null, "metadata": {}},
+          "content": {"content_type": "text", "parts": ["How do I refactor this function?"]},
+          "create_time": 1704067200.0,
+          "status": "finished_successfully"
+        },
+        "parent": null,
+        "children": []
+      },
+      "msg-a-1": {
+        "id": "msg-a-1",
+        "message": {
+          "id": "msg-a-1",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "content": {"content_type": "text", "parts": ["You can extract duplicated logic and add tests."]},
+          "create_time": 1704067255.0,
+          "status": "finished_successfully"
+        },
+        "parent": "msg-u-1",
+        "children": []
+      }
+    }
+  }
+]

@@ -1,0 +1,196 @@
+[
+  {
+    "title": "Unit test naming",
+    "create_time": 1704067200.0,
+    "update_time": 1704067250.0,
+    "mapping": {
+      "root-1": {
+        "id": "root-1",
+        "message": null,
+        "parent": null,
+        "children": [
+          "user-1"
+        ]
+      },
+      "user-1": {
+        "id": "user-1",
+        "message": {
+          "id": "user-1",
+          "author": {
+            "role": "user",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1704067205.0,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "How should I name pytest tests for parser edge cases?"
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": null,
+          "weight": 1.0,
+          "metadata": {},
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "root-1",
+        "children": [
+          "assistant-1"
+        ]
+      },
+      "assistant-1": {
+        "id": "assistant-1",
+        "message": {
+          "id": "assistant-1",
+          "author": {
+            "role": "assistant",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1704067240.0,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Use names that describe the behavior under test, such as test_parse_skips_empty_messages."
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": true,
+          "weight": 1.0,
+          "metadata": {
+            "model_slug": "gpt-5"
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "user-1",
+        "children": []
+      }
+    },
+    "moderation_results": [],
+    "current_node": "assistant-1",
+    "plugin_ids": null,
+    "conversation_id": "conv-sample-openai-1",
+    "conversation_template_id": null,
+    "gizmo_id": null,
+    "gizmo_type": null,
+    "is_archived": false,
+    "is_starred": false,
+    "safe_urls": [],
+    "blocked_urls": [],
+    "default_model_slug": "auto",
+    "conversation_origin": null,
+    "voice": null,
+    "async_status": null,
+    "disabled_tool_ids": [],
+    "is_do_not_remember": false,
+    "memory_scope": "global_enabled",
+    "context_scopes": null,
+    "sugar_item_id": null,
+    "sugar_item_visible": false,
+    "is_study_mode": false,
+    "owner": null,
+    "id": "conv-sample-openai-1"
+  },
+  {
+    "title": "Zip import workflow",
+    "create_time": 1704067300.0,
+    "update_time": 1704067360.0,
+    "mapping": {
+      "root-2": {
+        "id": "root-2",
+        "message": null,
+        "parent": null,
+        "children": [
+          "user-2"
+        ]
+      },
+      "user-2": {
+        "id": "user-2",
+        "message": {
+          "id": "user-2",
+          "author": {
+            "role": "user",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1704067310.0,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Can the CLI parse a zipped export directly?"
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": null,
+          "weight": 1.0,
+          "metadata": {},
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "root-2",
+        "children": [
+          "assistant-2"
+        ]
+      },
+      "assistant-2": {
+        "id": "assistant-2",
+        "message": {
+          "id": "assistant-2",
+          "author": {
+            "role": "assistant",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1704067350.0,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Yes. The parse command accepts conversations.json, a directory containing it, or a zip archive that includes it."
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": true,
+          "weight": 1.0,
+          "metadata": {
+            "model_slug": "gpt-5"
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "user-2",
+        "children": []
+      }
+    },
+    "moderation_results": [],
+    "current_node": "assistant-2",
+    "plugin_ids": null,
+    "conversation_id": "conv-sample-openai-2",
+    "conversation_template_id": null,
+    "gizmo_id": null,
+    "gizmo_type": null,
+    "is_archived": false,
+    "is_starred": false,
+    "safe_urls": [],
+    "blocked_urls": [],
+    "default_model_slug": "auto",
+    "conversation_origin": null,
+    "voice": null,
+    "async_status": null,
+    "disabled_tool_ids": [],
+    "is_do_not_remember": false,
+    "memory_scope": "global_enabled",
+    "context_scopes": null,
+    "sugar_item_id": null,
+    "sugar_item_visible": false,
+    "is_study_mode": false,
+    "owner": null,
+    "id": "conv-sample-openai-2"
+  }
+]

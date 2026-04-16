@@ -1,0 +1,2 @@
+{"message_id": "msg-u-1", "conversation_id": "conv-sample-1", "role": "user", "content": "How do I refactor this function?", "title": "Refactor Helper", "message_create_time": 1704067200.0}
+{"message_id": "msg-a-1", "conversation_id": "conv-sample-1", "role": "assistant", "content": "You can extract duplicated logic and add tests.", "title": "Refactor Helper", "message_create_time": 1704067255.0}

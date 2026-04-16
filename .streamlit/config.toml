@@ -1,0 +1,22 @@
+[browser]
+gatherUsageStats = false
+
+[server]
+enableCORS = true
+enableXsrfProtection = true
+maxUploadSize = 200
+maxMessageSize = 200
+
+# Prevent external access (localhost only)
+headless = true
+address = "localhost"
+port = 8501
+
+[client]
+# Minimize information exposure
+toolbarMode = "minimal"
+showErrorDetails = "none"
+
+[runner]
+# Faster reruns, better UX
+fastReruns = true

@@ -1,0 +1,28 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: Format with ruff
+        entry: ruff format
+        language: system
+        types: [python]
+        pass_filenames: true
+      
+      - id: ruff-check
+        name: Lint with ruff
+        entry: ruff check --fix
+        language: system
+        types: [python]
+        pass_filenames: true
+      
+      - id: poetry-export-requirements
+        name: Sync requirements.txt via poetry export
+        entry: bash -c 'poetry export --format requirements.txt --output requirements.txt --without-hashes && git diff --exit-code requirements.txt'
+        language: system
+        pass_filenames: false
+
+      - id: public-example-safety
+        name: Validate public example data
+        entry: pytest -q tests/test_public_examples.py
+        language: system
+        pass_filenames: false
