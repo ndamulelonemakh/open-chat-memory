@@ -10,9 +10,34 @@ from pathlib import Path
 from loguru import logger
 
 from . import SCHEMA_VERSION, __version__
-from .memory.mem0 import push_memories as mem0_push_memories
+try:
+    from .memory.mem0 import push_memories as mem0_push_memories
+except ImportError:
+    mem0_push_memories = None
 from .parsers.base import ParserRegistry
-from .persistence.postgres import load_jsonl_to_postgres
+try:
+    from .persistence.postgres import load_jsonl_to_postgres
+except ImportError:
+    load_jsonl_to_postgres = None
+
+
+def _detect_provider(file_path: Path) -> str | None:
+    """Attempt to detect the provider based on file content."""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            # Read first few KB to detect structure
+            content = f.read(5000)
+            if '"mapping"' in content and '"title"' in content:
+                return "chatgpt"
+            if '"chat_messages"' in content and '"uuid"' in content:
+                return "claude"
+            # Gemini Takeout often has "candidates" or "metadata" or "prompt"
+            # Let's assume a structure for Gemini if we find it.
+            if '"prompt"' in content and '"candidates"' in content:
+                return "gemini"
+    except Exception as e:
+        logger.error(f"Error detecting provider: {e}")
+    return None
 
 
 def _resolve_conversations_json(input_path: Path) -> Path:
@@ -57,26 +82,52 @@ def _resolve_conversations_json(input_path: Path) -> Path:
 
 
 def _cmd_parse(ns: argparse.Namespace) -> int:
-    parser_cls = ParserRegistry.get(ns.provider)
+    return run_parse(ns.provider, ns.input, ns.out)
+
+
+def run_parse(provider: str, input_str: str, out_str: str) -> int:
+    parser_cls = ParserRegistry.get(provider)
     if not parser_cls:
-        logger.error(f"Unknown provider '{ns.provider}'. Available: {ParserRegistry.available()}")
+        logger.error(f"Unknown provider '{provider}'. Available: {ParserRegistry.available()}")
         return 2
     parser = parser_cls()
 
     try:
-        conversations_path = _resolve_conversations_json(Path(ns.input))
+        conversations_path = _resolve_conversations_json(Path(input_str))
     except (FileNotFoundError, ValueError) as e:
         logger.error(f"Failed to resolve input: {e}")
         return 1
 
     messages = parser.parse(conversations_path)
-    out = Path(ns.out)
+    out = Path(out_str)
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8") as fp:
         for msg in messages:
             fp.write(json.dumps(msg.model_dump()) + "\n")
     logger.success(f"Wrote {len(messages)} messages -> {out}")
     return 0
+
+
+def _cmd_ingest(ns: argparse.Namespace) -> int:
+    """Ingest command: auto-detect provider and parse into staging."""
+    input_path = Path(ns.input)
+    try:
+        conv_path = _resolve_conversations_json(input_path)
+    except Exception as e:
+        logger.error(f"Failed to resolve input: {e}")
+        return 1
+
+    provider = ns.provider
+    if not provider:
+        provider = _detect_provider(conv_path)
+
+    if not provider:
+        logger.error("Could not auto-detect provider. Please specify with --provider")
+        return 1
+
+    logger.info(f"Detected provider: {provider}")
+    out_path = Path("data/staging") / f"{provider}_messages.jsonl"
+    return run_parse(provider, str(ns.input), str(out_path))
 
 
 def _configure_logging(log_format: str) -> None:
@@ -89,6 +140,9 @@ def _configure_logging(log_format: str) -> None:
 
 
 def _cmd_db_load(ns: argparse.Namespace) -> int:
+    if load_jsonl_to_postgres is None:
+        logger.error("sqlalchemy or psycopg is not installed. Run 'pip install openchatmemory[db]'")
+        return 1
     return load_jsonl_to_postgres(
         Path(ns.input),
         ns.db_url,
@@ -98,6 +152,9 @@ def _cmd_db_load(ns: argparse.Namespace) -> int:
 
 
 def _cmd_mem_push(ns: argparse.Namespace) -> int:
+    if mem0_push_memories is None:
+        logger.error("mem0 is not installed. Run 'pip install openchatmemory[mem0]'")
+        return 1
     return mem0_push_memories(Path(ns.input), user_id=ns.user_id, provider=ns.provider)
 
 
@@ -126,6 +183,11 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description="Chat export parser and loader")
     ap.add_argument("--log-format", choices=["text", "json"], default="text", help="Logging format (default: text)")
     sp = ap.add_subparsers(dest="cmd", required=True)
+
+    ap_ingest = sp.add_parser("ingest", help="Auto-detect and ingest chat export")
+    ap_ingest.add_argument("input", help="Path to export file or directory")
+    ap_ingest.add_argument("--provider", help="Explicitly set provider (chatgpt|claude|gemini)")
+    ap_ingest.set_defaults(func=_cmd_ingest)
 
     ap_parse = sp.add_parser("parse", help="Parse provider export into JSONL messages")
     ap_parse.add_argument("--provider", required=True, help="chatgpt|claude|...")
