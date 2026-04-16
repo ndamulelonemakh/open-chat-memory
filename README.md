@@ -48,6 +48,8 @@ See [Environment Variables](#environment-variables) section below for all option
 
 ## Quickstart
 
+* Download and unzip your chat export from your provider (e.g. [ChatGPT](https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data), [Claude](https://support.claude.com/en/articles/9450526-how-can-i-export-my-claude-data)).
+
 ```bash
 # Parse exports - accepts conversations.json, directory, or .zip
 ocmem parse --provider chatgpt --input data/interim/chatgpt/conversations.json --out data/final/chatgpt/messages.jsonl
