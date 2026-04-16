@@ -8,7 +8,7 @@ CLI name: ocmem (also available: openchatmemory)
 
 ## Motivation
 
-> I have always been curios about my behavior and patterns when using AI chat services. However, these platforms often retain this insights for their own analytics and bulk profiling. This project is an attempt to make such insights accessible in a privacy-preserving manner. You are welcome to adopt and extend it as you see fit.
+> I have always been curious about my behavior and patterns when using AI chat services. However, these platforms often retain these insights for their own analytics and bulk profiling. This project is an attempt to make such insights accessible in a privacy-preserving manner. You are welcome to adopt and extend it as you see fit.
 
 ## Features
 

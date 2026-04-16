@@ -2,7 +2,7 @@
 [project]
 name = "openchatmemory"
 version = "0.1.1rc1"
-description = "Parse AI chat exports, load into databases, and push grouped memories to memory stores."
+description = "Reclaim your AI chat history: A privacy-preserving ETL pipeline to extract insights, analyze patterns, and build private memory stores from your ChatGPT and Claude exports."
 authors = [{ name = "Ndamulelo Nemakhavhani", email = "hello@ndamulelo.co.za" }]
 maintainers = [{ name = "Ndamulelo Nemakhavhani", email = "hello@ndamulelo.co.za" }]
 readme = "README.md"
