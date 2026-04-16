@@ -5,6 +5,9 @@ os.environ["STREAMLIT_TELEMETRY"] = "false"
 os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 
 import json
+import os
+import shutil
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -12,6 +15,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from loguru import logger
+
+from openchatmemory.cli import run_parse, _detect_provider, _resolve_conversations_json
 
 logger.remove()
 logger.add(
@@ -816,6 +821,107 @@ def render_conversations(chatgpt_df, claude_df):
             st.plotly_chart(fig9, use_container_width=True)
 
 
+def score_prompt(text):
+    """Simple heuristic to score prompt quality."""
+    if not text or not isinstance(text, str):
+        return 0
+    score = 0
+    words = text.split()
+    if len(words) > 20: score += 20
+    if len(words) > 50: score += 20
+    if "?" in text: score += 10
+    if "example" in text.lower() or "instance" in text.lower(): score += 15
+    if "format" in text.lower() or "structure" in text.lower(): score += 15
+    if "context" in text.lower() or "background" in text.lower(): score += 10
+    if len(text) > 500: score += 10
+    return min(score, 100)
+
+def render_optimization(chatgpt_df, claude_df, gemini_df):
+    st.title("🚀 Usage Optimization")
+    st.markdown("Insights and tips to get the most out of your AI interactions.")
+
+    all_dfs = []
+    if not chatgpt_df.empty: all_dfs.append(chatgpt_df.assign(platform="ChatGPT"))
+    if not claude_df.empty: all_dfs.append(claude_df.assign(platform="Claude"))
+    if not gemini_df.empty: all_dfs.append(gemini_df.assign(platform="Gemini"))
+
+    if not all_dfs:
+        st.warning("No data available for optimization analysis.")
+        return
+
+    df = pd.concat(all_dfs)
+    user_msgs = df[df["role"].isin(["user", "human"])]
+
+    if user_msgs.empty:
+        st.warning("No user messages found to analyze.")
+        return
+
+    # Prompt Quality Analysis
+    st.subheader("🎯 Prompt Quality Score")
+    user_msgs["prompt_score"] = user_msgs["content"].apply(score_prompt)
+    avg_score = user_msgs["prompt_score"].mean()
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.metric("Average Prompt Score", f"{avg_score:.1f}/100")
+        if avg_score < 40:
+            st.error("Your prompts are very brief. Try adding more context!")
+        elif avg_score < 70:
+            st.warning("Good start! Adding examples or specific formats could help.")
+        else:
+            st.success("Great! You provide detailed instructions.")
+
+    with col2:
+        fig = px.histogram(user_msgs, x="prompt_score", nbins=20, title="Distribution of Prompt Scores",
+                          labels={"prompt_score": "Score"}, color="platform", barmode="overlay")
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.divider()
+
+    # Optimization Tips
+    st.subheader("💡 Optimization Tips")
+
+    tips = []
+    if avg_score < 60:
+        tips.append("**Better Context**: Your average prompt is short. Use the 'Persona-Task-Context-Format' framework.")
+
+    # Temporal patterns for optimization
+    user_msgs["hour"] = pd.to_datetime(user_msgs["message_create_time"], unit="s", errors="coerce").dt.hour
+    peak_hour = user_msgs["hour"].mode()[0] if not user_msgs["hour"].dropna().empty else None
+
+    if peak_hour is not None:
+        if 9 <= peak_hour <= 17:
+            tips.append(f"**Deep Work**: You are most active at {peak_hour:02d}:00. Save this time for complex architectural discussions.")
+        else:
+            tips.append(f"**Off-peak Activity**: You use AI heavily at {peak_hour:02d}:00. Ensure you aren't using it for simple tasks that could be batched.")
+
+    for tip in tips:
+        st.info(tip)
+
+    st.divider()
+    st.subheader("🧠 Topic Intent (Experimental)")
+    # Simple keyword-based intent
+    intents = {
+        "Coding": ["code", "python", "debug", "function", "error", "git", "api"],
+        "Writing": ["write", "draft", "email", "blog", "summary", "text"],
+        "Learning": ["explain", "what is", "how does", "teach", "learn"],
+        "Creative": ["story", "poem", "idea", "creative", "imagine"]
+    }
+
+    def detect_intent(text):
+        text = str(text).lower()
+        for intent, keywords in intents.items():
+            if any(kw in text for kw in keywords):
+                return intent
+        return "General"
+
+    user_msgs["intent"] = user_msgs["content"].apply(detect_intent)
+    intent_counts = user_msgs["intent"].value_counts().reset_index()
+
+    fig_intent = px.pie(intent_counts, values="count", names="intent", title="Conversation Intent Distribution")
+    st.plotly_chart(fig_intent, use_container_width=True)
+
+
 def render_content(chatgpt_df, claude_df):
     st.title("🔤 Content Analysis")
 
@@ -1542,6 +1648,17 @@ def render_comparison(chatgpt_df, claude_df):
             )
 
 
+import re
+
+def mask_pii(text):
+    """Simple PII masking for email and phone numbers."""
+    if not isinstance(text, str): return text
+    # Mask emails
+    text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', text)
+    # Mask phone numbers (simple version)
+    text = re.sub(r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b', '[PHONE]', text)
+    return text
+
 def render_llm_analysis(chatgpt_df, claude_df):
     """LLM-powered semantic analysis using OpenAI Responses API."""
     st.title("🎯 LLM-Powered Insights")
@@ -1637,11 +1754,13 @@ def render_llm_analysis(chatgpt_df, claude_df):
     with col3:
         model_choice = st.selectbox(
             "Model",
-            ["gpt-5-mini", "gpt-5-nano", "gpt-5", "gpt-4o", "gpt-4o-mini", "gpt-4.1", "o3"],
+            ["gpt-4o", "gpt-4o-mini", "o1", "o3-mini"],
             help="Choose the model for analysis",
         )
 
     st.divider()
+
+    do_mask = st.checkbox("Enable PII Masking", value=True, help="Mask emails and phone numbers in topic titles before sending to API")
 
     if st.button("🚀 Generate Insights", type="primary", use_container_width=True):
         active_key = api_key or st.session_state.get("_temp_api_key")
@@ -1655,7 +1774,7 @@ def render_llm_analysis(chatgpt_df, claude_df):
 
             with st.spinner("🤖 Analyzing your chat patterns with OpenAI..."):
                 # Prepare aggregated data
-                summary_stats = prepare_analysis_data(chatgpt_df, claude_df)
+                summary_stats = prepare_analysis_data(chatgpt_df, claude_df, do_mask=do_mask)
 
                 # Create OpenAI client
                 client = OpenAI(api_key=active_key)
@@ -1782,7 +1901,7 @@ Use a friendly, conversational tone while maintaining professionalism.""",
 
 
 @st.cache_data
-def prepare_analysis_data(chatgpt_df, claude_df):
+def prepare_analysis_data(chatgpt_df, claude_df, do_mask=True):
     """Prepare aggregated data for LLM analysis (privacy-preserving)."""
 
     # Conversation-level stats
@@ -1813,7 +1932,7 @@ def prepare_analysis_data(chatgpt_df, claude_df):
                 "start": chatgpt_df["conversation_create_time"].min().strftime("%Y-%m-%d"),
                 "end": chatgpt_df["conversation_create_time"].max().strftime("%Y-%m-%d"),
             },
-            "top_5_topics": chatgpt_df["title"].value_counts().head(5).to_dict(),
+            "top_5_topics": {mask_pii(k) if do_mask else k: v for k, v in chatgpt_df["title"].value_counts().head(5).items()},
         },
         "claude": {
             "total_messages": len(claude_df),
@@ -1826,7 +1945,7 @@ def prepare_analysis_data(chatgpt_df, claude_df):
                 "start": claude_df["conversation_create_time"].min().strftime("%Y-%m-%d"),
                 "end": claude_df["conversation_create_time"].max().strftime("%Y-%m-%d"),
             },
-            "top_5_topics": claude_df["title"].value_counts().head(5).to_dict(),
+            "top_5_topics": {mask_pii(k) if do_mask else k: v for k, v in claude_df["title"].value_counts().head(5).items()},
         },
         "combined_stats": {
             "total_messages": len(chatgpt_df) + len(claude_df),
@@ -1906,12 +2025,59 @@ Use markdown formatting with headers, bullet points, and emphasis where appropri
     return prompt
 
 
+def render_import():
+    st.title("📥 Instant Import")
+    st.markdown("Upload your chat export (zip or json) and we'll handle the rest.")
+
+    uploaded_file = st.file_uploader("Choose a file", type=["zip", "json"])
+
+    if uploaded_file is not None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_path = Path(tmpdir) / uploaded_file.name
+            with open(temp_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            st.info(f"Processing {uploaded_file.name}...")
+
+            try:
+                # Resolve conversations.json
+                conv_path = _resolve_conversations_json(temp_path)
+                provider = _detect_provider(conv_path)
+
+                if not provider:
+                    provider = st.selectbox("Could not auto-detect provider. Please select:", ["chatgpt", "claude", "gemini"])
+                else:
+                    st.success(f"Detected {provider} export!")
+
+                if st.button("Start Ingestion"):
+                    out_dir = Path("data/staging")
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    out_path = out_dir / f"{provider}_messages.jsonl"
+
+                    # We need to be careful with run_parse because it might try to extract zip again if we pass the zip path
+                    # but _resolve_conversations_json already extracted it if it was a zip.
+                    # Actually run_parse calls _resolve_conversations_json internally.
+                    # So we can just pass the temp_path.
+
+                    result = run_parse(provider, str(temp_path), str(out_path))
+
+                    if result == 0:
+                        st.success(f"Successfully ingested {provider} chats!")
+                        st.balloons()
+                        if st.button("Go to Overview"):
+                            st.rerun()
+                    else:
+                        st.error("Failed to ingest chats. Check logs.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
 def render_settings():
     st.title("⚙️ Settings")
 
     st.subheader("Data Sources")
     st.text_input("ChatGPT Data", value="data/staging/chatgpt_messages.jsonl")
     st.text_input("Claude Data", value="data/staging/claude_messages.jsonl")
+    st.text_input("Gemini Data", value="data/staging/gemini_messages.jsonl")
 
     st.subheader("Filters")
     st.date_input("Date Range", value=(datetime.now() - timedelta(days=365), datetime.now()))
@@ -1933,7 +2099,9 @@ def main():
             "💬 Conversations",
             "🔤 Content",
             "🤖 Comparison",
+            "🚀 Optimization",
             "🎯 LLM Analysis",
+            "📥 Import",
             "⚙️ Settings",
         ],
     )
@@ -1946,17 +2114,28 @@ def main():
 
     try:
         chatgpt_df = load_data("data/staging/chatgpt_messages.jsonl")
-        claude_df = load_data("data/staging/claude_messages.jsonl")
+    except Exception:
+        chatgpt_df = pd.DataFrame()
 
-    except FileNotFoundError:
+    try:
+        claude_df = load_data("data/staging/claude_messages.jsonl")
+    except Exception:
+        claude_df = pd.DataFrame()
+
+    try:
+        gemini_df = load_data("data/staging/gemini_messages.jsonl")
+    except Exception:
+        gemini_df = pd.DataFrame()
+
+    if chatgpt_df.empty and claude_df.empty and gemini_df.empty and page != "📥 Import":
         st.error("⚠️ Chat data files not found")
-        st.info("📝 **Next Steps:** Run the parser to generate data files")
+        st.info("📝 **Next Steps:** Use the **Import** tab to upload your chat exports or run the parser manually.")
 
         st.code(
             """
 # Parse your chat exports first:
-ocmem parse --provider chatgpt --input chatgpt-export.zip --out data/staging/
-ocmem parse --provider claude --input claude-export.zip --out data/staging/
+ocmem ingest chatgpt-export.zip
+ocmem ingest claude-export.zip
 
 # Then restart the app:
 streamlit run app.py
@@ -1971,21 +2150,12 @@ streamlit run app.py
             - `data/staging/claude_messages.jsonl`
 
             **Common issues:**
-            1. Parser not run yet → Run `ocmem parse`
+            1. Parser not run yet → Run `ocmem ingest` or use the Import tab.
             2. Wrong directory → Check current working directory
             3. Empty exports → Verify export files are valid
 
             **Need help?** See [documentation](https://github.com/ndamulelonemakh/open-chat-memory)
             """)
-        return
-
-    except Exception as e:
-        st.error("⚠️ Error loading chat data")
-        logger.error(f"Data loading error: {type(e).__name__}: {str(e)}")
-
-        with st.expander("🔍 Technical Details"):
-            st.text("An unexpected error occurred. Check console/logs for details.")
-            st.code(f"Error type: {type(e).__name__}")
         return
 
     if page == "📊 Overview":
@@ -1998,8 +2168,12 @@ streamlit run app.py
         render_content(chatgpt_df, claude_df)
     elif page == "🤖 Comparison":
         render_comparison(chatgpt_df, claude_df)
+    elif page == "🚀 Optimization":
+        render_optimization(chatgpt_df, claude_df, gemini_df)
     elif page == "🎯 LLM Analysis":
         render_llm_analysis(chatgpt_df, claude_df)
+    elif page == "📥 Import":
+        render_import()
     elif page == "⚙️ Settings":
         render_settings()
 

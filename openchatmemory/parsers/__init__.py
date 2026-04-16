@@ -8,6 +8,7 @@ from ..schemas import MessageModel
 from .base import BaseParser, ParserRegistry
 from .chatgpt import ChatGPTParser
 from .claude import ClaudeParser
+from .gemini import GeminiParser
 
 __all__ = [
     "BaseParser",
@@ -15,4 +16,5 @@ __all__ = [
     "ParserRegistry",
     "ChatGPTParser",
     "ClaudeParser",
+    "GeminiParser",
 ]
