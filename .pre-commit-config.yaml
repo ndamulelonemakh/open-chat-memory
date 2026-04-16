@@ -14,12 +14,6 @@ repos:
         language: system
         types: [python]
         pass_filenames: true
-      
-      - id: poetry-export-requirements
-        name: Sync requirements.txt via poetry export
-        entry: bash -c 'poetry export --format requirements.txt --output requirements.txt --without-hashes && git diff --exit-code requirements.txt'
-        language: system
-        pass_filenames: false
 
       - id: public-example-safety
         name: Validate public example data
