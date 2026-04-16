@@ -176,7 +176,7 @@ Please see `CONTRIBUTING.md`. Before submitting a PR:
 
 ## Version
 
-Current package version: `0.1.0`
+Current package version: `0.1.1rc1`
 
 ## License
 

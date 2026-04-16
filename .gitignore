@@ -10,6 +10,8 @@ build/
 data/
 logs/*.log
 .streamlit/secrets.toml
+.vscode/
+poetry.toml
 tmp-1/
 # Byte-compiled / optimized / DLL files
 __pycache__/
