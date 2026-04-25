@@ -1,8 +1,9 @@
 import json
+
 import pytest
-from pathlib import Path
+
 from openchatmemory.parsers.gemini import GeminiParser
-from openchatmemory.schemas import MessageModel
+
 
 class TestGeminiParser:
     @pytest.fixture

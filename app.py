@@ -6,7 +6,7 @@ os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 
 import json
 import os
-import shutil
+import re
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -16,7 +16,7 @@ import plotly.express as px
 import streamlit as st
 from loguru import logger
 
-from openchatmemory.cli import run_parse, _detect_provider, _resolve_conversations_json
+from openchatmemory.cli import _detect_provider, _resolve_conversations_json, run_parse
 
 logger.remove()
 logger.add(
@@ -827,13 +827,20 @@ def score_prompt(text):
         return 0
     score = 0
     words = text.split()
-    if len(words) > 20: score += 20
-    if len(words) > 50: score += 20
-    if "?" in text: score += 10
-    if "example" in text.lower() or "instance" in text.lower(): score += 15
-    if "format" in text.lower() or "structure" in text.lower(): score += 15
-    if "context" in text.lower() or "background" in text.lower(): score += 10
-    if len(text) > 500: score += 10
+    if len(words) > 20:
+        score += 20
+    if len(words) > 50:
+        score += 20
+    if "?" in text:
+        score += 10
+    if "example" in text.lower() or "instance" in text.lower():
+        score += 15
+    if "format" in text.lower() or "structure" in text.lower():
+        score += 15
+    if "context" in text.lower() or "background" in text.lower():
+        score += 10
+    if len(text) > 500:
+        score += 10
     return min(score, 100)
 
 def render_optimization(chatgpt_df, claude_df, gemini_df):
@@ -841,9 +848,12 @@ def render_optimization(chatgpt_df, claude_df, gemini_df):
     st.markdown("Insights and tips to get the most out of your AI interactions.")
 
     all_dfs = []
-    if not chatgpt_df.empty: all_dfs.append(chatgpt_df.assign(platform="ChatGPT"))
-    if not claude_df.empty: all_dfs.append(claude_df.assign(platform="Claude"))
-    if not gemini_df.empty: all_dfs.append(gemini_df.assign(platform="Gemini"))
+    if not chatgpt_df.empty:
+        all_dfs.append(chatgpt_df.assign(platform="ChatGPT"))
+    if not claude_df.empty:
+        all_dfs.append(claude_df.assign(platform="Claude"))
+    if not gemini_df.empty:
+        all_dfs.append(gemini_df.assign(platform="Gemini"))
 
     if not all_dfs:
         st.warning("No data available for optimization analysis.")
@@ -1648,11 +1658,10 @@ def render_comparison(chatgpt_df, claude_df):
             )
 
 
-import re
-
 def mask_pii(text):
     """Simple PII masking for email and phone numbers."""
-    if not isinstance(text, str): return text
+    if not isinstance(text, str):
+        return text
     # Mask emails
     text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', text)
     # Mask phone numbers (simple version)

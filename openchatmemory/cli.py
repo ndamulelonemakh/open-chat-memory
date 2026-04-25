@@ -10,11 +10,13 @@ from pathlib import Path
 from loguru import logger
 
 from . import SCHEMA_VERSION, __version__
+
 try:
     from .memory.mem0 import push_memories as mem0_push_memories
 except ImportError:
     mem0_push_memories = None
 from .parsers.base import ParserRegistry
+
 try:
     from .persistence.postgres import load_jsonl_to_postgres
 except ImportError:
@@ -24,7 +26,7 @@ except ImportError:
 def _detect_provider(file_path: Path) -> str | None:
     """Attempt to detect the provider based on file content."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             # Read first few KB to detect structure
             content = f.read(5000)
             if '"mapping"' in content and '"title"' in content:
