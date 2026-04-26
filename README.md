@@ -21,14 +21,26 @@ CLI name: ocmem (also available: openchatmemory)
 
 ## Install
 
+The core package is lightweight. Features like database support, memory stores, and the visualization app are available as optional extras.
+
+### Using uv (Recommended)
+
 ```bash
+# Install everything
 uv sync --all-extras
+
+# Or install only specific extras
+uv sync --extra app   # For the Streamlit dashboard
+uv sync --extra db    # For PostgreSQL support
+uv sync --extra mem0  # For Mem0 integration
 ```
 
-Alternatively, with pip:
+### Using pip
 
 ```bash
-pip install -e ".[db,mem0,app]"
+pip install .
+# Or with extras
+pip install "openchatmemory[db,mem0,app]"
 ```
 
 ## Configuration
@@ -44,7 +56,7 @@ Edit `.env` with your credentials. At minimum, set:
 
 See [Environment Variables](#environment-variables) section below for all options.
 
-* [Demo app]() - `streamlit run app.py`
+* [Demo app]() - `uv run streamlit run app.py` (requires `app` extra)
 
 ![AI Overview Screenshot](docs/images/ai_overviews.png)
 
@@ -76,14 +88,14 @@ The export files under `docs/examples/*-export-sample/` are synthetic public fix
 
 ### Statistical EDA
 ```bash
-python docs/examples/eda_analysis.py
+uv run docs/examples/eda_analysis.py
 ```
 Generates temporal patterns, word clouds, and platform comparisons.
 
 ### LLM-Powered Analysis
 ```bash
 export OPENAI_API_KEY="your-key-here"
-python docs/examples/llm_conversation_analysis.py
+uv run docs/examples/llm_conversation_analysis.py
 ```
 
 📚 **[View Analysis Examples Documentation →](docs/analysis-tools-index.md)**
@@ -167,20 +179,15 @@ See [`.env.example`](.env.example) for a complete template.
 ## Development
 
 - Python 3.11+
-- Run tests: `pytest -q`
-- Lint/typecheck: `ruff`, `mypy` (coming soon)
+- Run tests: `uv run pytest -q`
+- Lint/typecheck: `uv run ruff check .`, `uv run mypy openchatmemory`
 
 ## Contributing
 
 Please see `CONTRIBUTING.md`. Before submitting a PR:
 
-- Run tests: `pytest -q`
-- Run linter: `ruff check .`
-- Run type checker: `mypy .` (if enabled)
-
-## Version
-
-Current package version: `0.1.1rc1`
+- Run tests: `uv run pytest -q`
+- Run linter: `uv run ruff check .`
 
 ## License
 

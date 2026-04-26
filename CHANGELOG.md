@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.1rc2] - 2026-04-26
+
+### Added
+- **uv Integration**: Migrated package management from Poetry to `uv` for faster, more reliable dependency resolution and environment management.
+- **Visualization Dashboard**: Added Streamlit-based web application for interactive exploration of chat history (available via `app` extra).
+- **Topic Modeling**: Integrated `bertopic` for automated semantic grouping of conversations.
+- **Improved Documentation**: Added comprehensive guides for environment setup, CLI usage, and analysis examples.
+
+### Changed
+- **Dependency Management**: Replaced `poetry.lock` and `poetry.toml` with `uv.lock`.
+- **Project Configuration**: Refactored `pyproject.toml` to use standard PEP 723 dependency groups and `tool.uv` configuration.
+- **CI/CD Pipeline**: Updated GitHub Actions to use `astral-sh/setup-uv`, improving build and test speeds.
+- **CLI Commands**: Standardized all execution examples to use `uv run`.
+
+### Fixed
+- Resolved `bertopic` visualization dependency conflict by removing non-existent `visualization` extra.
+- Fixed syntax errors and unused variables in analysis example scripts (`eda_analysis.py`, `llm_conversation_analysis.py`).
+- Corrected redundant imports in example notebooks.
 
 ## [0.1.0] - 2025-05-02
 
