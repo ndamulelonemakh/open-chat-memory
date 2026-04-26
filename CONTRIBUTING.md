@@ -41,25 +41,18 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 ### Setting Up Your Environment
 
-1. **Create a virtual environment**:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
+1. **Install uv**:
+   Follow the [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
-2. **Install the package in development mode**:
+2. **Sync the environment**:
    ```bash
-   pip install -e ".[db,mem0]"
+   uv sync --all-extras
    ```
+   This will create a `.venv`, install the package in editable mode, and install all dependencies (including dev tools like `ruff`, `mypy`, and `pytest`).
 
-3. **Install development dependencies**:
+3. **Run tests to verify setup**:
    ```bash
-   pip install pytest pytest-cov ruff mypy
-   ```
-
-4. **Run tests to verify setup**:
-   ```bash
-   pytest -q
+   uv run pytest -q
    ```
 
 ## How to Contribute
@@ -95,13 +88,13 @@ Run ruff before committing:
 
 ```bash
 # Check formatting
-ruff check .
+uv run ruff check .
 
 # Auto-fix issues
-ruff check --fix .
+uv run ruff check . --fix
 
 # Format code
-ruff format .
+uv run ruff format .
 ```
 
 ### Type Checking
@@ -109,7 +102,7 @@ ruff format .
 Run mypy for type checking:
 
 ```bash
-mypy openchatmemory
+uv run mypy openchatmemory
 ```
 
 ### Documentation

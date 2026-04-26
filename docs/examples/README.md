@@ -14,7 +14,7 @@ Exploratory Data Analysis with visualizations:
 
 **Run:**
 ```bash
-python docs/examples/eda_analysis.py
+uv run docs/examples/eda_analysis.py
 ```
 
 **Output:** PNG visualizations saved to `data/figures/`
@@ -34,7 +34,7 @@ Advanced semantic analysis using GPT-4o-mini:
 **Run:**
 ```bash
 export OPENAI_API_KEY="your-key-here"
-python docs/examples/llm_conversation_analysis.py
+uv run docs/examples/llm_conversation_analysis.py
 ```
 
 **Output:** JSON results saved to `data/figures/llm_conversation_analysis.json`

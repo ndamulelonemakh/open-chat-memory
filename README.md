@@ -22,11 +22,13 @@ CLI name: ocmem (also available: openchatmemory)
 ## Install
 
 ```bash
-pip install -e .
-# or with extras
-pip install -e .[db]
-pip install -e .[mem0]
-pip install -e .[db,mem0]
+uv sync --all-extras
+```
+
+Alternatively, with pip:
+
+```bash
+pip install -e ".[db,mem0,app]"
 ```
 
 ## Configuration
